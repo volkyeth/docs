@@ -3,7 +3,7 @@ import { Context, createContext } from 'react'
 import { NavItem, NavItemGroup, NavItemPage } from '@/navigation'
 
 export type NavContextProps = {
-  pagePath: string
+  filePath: string
   navItems: NavItem[]
   previousPage: NavItemPage | null
   currentPage: NavItemPage | null

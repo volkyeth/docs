@@ -58,15 +58,8 @@ const mdxStyles = {
 } as ThemeUIStyleObject
 
 export function MDXLayout({ children, pageOpts, pageProps }: NextraThemeLayoutProps) {
-  const pagePath = pageOpts.filePath
   const navItems: NavItem[] = pageProps.navItems
-  const frontmatter = pageOpts.frontMatter
-  const outline = pageOpts.headings.map(({ depth, value, id }) => ({
-    id,
-    level: depth,
-    title: value,
-  }))
-
+  const { frontMatter, headings, filePath } = pageOpts
   const { pathWithoutLocale } = useI18n()
 
   // Compute some values for the `NavContext`
@@ -83,9 +76,8 @@ export function MDXLayout({ children, pageOpts, pageProps }: NextraThemeLayoutPr
               currentGroup = navItem
             }
             return true
-          } else {
-            return false
           }
+          return false
         })
       }
       if ('path' in navItem) {
@@ -102,14 +94,19 @@ export function MDXLayout({ children, pageOpts, pageProps }: NextraThemeLayoutPr
       }
       pageNavItemIndex++
     }
-    return { previousPage, currentPage, nextPage, currentGroup: currentGroup as NavItemGroup | null }
+    return {
+      previousPage,
+      currentPage,
+      nextPage,
+      currentGroup: currentGroup as NavItemGroup | null,
+    }
   }, [navItems, pathWithoutLocale])
 
   // Provide `markOutlineItem` to the `DocumentContext` so child `Heading` components can mark outline items as "in or above view" or not
   const [
     ,
     { add: markOutlineItemAsInOrAboveView, remove: markOutlineItemAsNotInOrAboveView, has: outlineItemIsInOrAboveView },
-  ] = useSet(new Set([]) as Set<string>)
+  ] = useSet(new Set<string>([]))
 
   const markOutlineItem = useCallback(
     (id: string, inOrAboveView: boolean) => {
@@ -125,36 +122,32 @@ export function MDXLayout({ children, pageOpts, pageProps }: NextraThemeLayoutPr
   // Compute `highlightedOutlineItemId` for the `DocumentContext` based on outline items that have been marked as "in or above view"
   const highlightedOutlineItemId = useMemo(() => {
     let _highlightedOutlineItemId = null
-    for (const outlineItem of outline) {
-      if (outlineItem.level <= 3 && outlineItemIsInOrAboveView(outlineItem.id)) {
-        _highlightedOutlineItemId = outlineItem.id
+    for (const heading of headings) {
+      if (heading.depth <= 3 && outlineItemIsInOrAboveView(heading.id)) {
+        _highlightedOutlineItemId = heading.id
       }
     }
     return _highlightedOutlineItemId
-  }, [outline, outlineItemIsInOrAboveView])
+  }, [headings, outlineItemIsInOrAboveView])
 
   let seo: NextSeoProps = {
-    title: `${frontmatter.title ? `${frontmatter.title} - ` : ''}The Graph Docs`,
+    title: `${frontMatter.title ? `${frontMatter.title} - ` : ''}The Graph Docs`,
   }
-  if (frontmatter.description) {
-    seo.description = frontmatter.description
+  if (frontMatter.description) {
+    seo.description = frontMatter.description
   }
-  if (frontmatter.socialImage) {
+  if (frontMatter.socialImage) {
     seo.openGraph = {
-      images: [
-        {
-          url: frontmatter.socialImage,
-        },
-      ],
+      images: [{ url: frontMatter.socialImage }],
     }
   }
-  if (frontmatter.seo) {
-    seo = merge(seo, frontmatter.seo)
+  if (frontMatter.seo) {
+    seo = merge(seo, frontMatter.seo)
   }
 
   return (
-    <NavContext.Provider value={{ pagePath, navItems, previousPage, currentPage, nextPage, currentGroup }}>
-      <DocumentContext.Provider value={{ frontmatter, outline, markOutlineItem, highlightedOutlineItemId }}>
+    <NavContext.Provider value={{ filePath, navItems, previousPage, currentPage, nextPage, currentGroup }}>
+      <DocumentContext.Provider value={{ frontMatter, headings, markOutlineItem, highlightedOutlineItemId }}>
         <NextSeo {...seo} />
 
         <div
@@ -191,7 +184,7 @@ export function MDXLayout({ children, pageOpts, pageProps }: NextraThemeLayoutPr
                   {currentGroup.title}
                 </div>
               ) : null}
-              {frontmatter.title ? <Heading.H1>{frontmatter.title}</Heading.H1> : null}
+              {frontMatter.title ? <Heading.H1>{frontMatter.title}</Heading.H1> : null}
               <MDXProvider components={mdxComponents}>{children}</MDXProvider>
             </article>
 

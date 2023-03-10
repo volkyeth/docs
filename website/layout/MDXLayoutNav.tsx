@@ -145,12 +145,12 @@ export const MDXLayoutNav = ({ mobile = false }: { mobile?: boolean }) => {
             facetFilters: [`language:${locale}`],
           }}
           disableUserPersonalization={true}
-          transformItems={(items) => {
-            return items.map((item) => ({
+          transformItems={(items) =>
+            items.map((item) => ({
               ...item,
               url: item.url.replace('https://thegraph.com/docs', process.env.BASE_PATH ?? ''),
             }))
-          }}
+          }
           hitComponent={DocSearchHit}
           navigator={{
             navigate({ itemUrl }) {
