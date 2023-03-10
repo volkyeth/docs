@@ -4,7 +4,7 @@ export type NavItemPage = {
   path: string
 }
 
-export type NavItemPagePromise = Promise<NavItemPage | null>
+export type NavItemPagePromise = NavItemPage | null
 
 export type NavItemPageDefinition = {
   title?: string

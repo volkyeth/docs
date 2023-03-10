@@ -25,7 +25,7 @@ import {
 } from '@/components'
 import { useI18n } from '@/i18n'
 import { DocumentContext, MDXLayoutNav, MDXLayoutOutline, MDXLayoutPagination, NavContext } from '@/layout'
-import { NavItem, NavItemGroup } from '@/navigation'
+import { getNavItems, NavItemGroup } from '@/navigation'
 
 const mdxComponents = {
   blockquote: Blockquote,
@@ -48,20 +48,19 @@ const mdxComponents = {
   Difficulty,
 }
 
-const mdxStyles = {
+const mdxStyles: ThemeUIStyleObject = {
   overflowWrap: 'break-word',
   'img + em': {
     mt: Spacing['16px'],
     display: 'block',
     textAlign: 'center',
   },
-} as ThemeUIStyleObject
+}
 
-export function MDXLayout({ children, pageOpts, pageProps }: NextraThemeLayoutProps) {
-  const navItems: NavItem[] = pageProps.navItems
+export function MDXLayout({ children, pageOpts }: NextraThemeLayoutProps) {
   const { frontMatter, headings, filePath } = pageOpts
-  const { pathWithoutLocale } = useI18n()
-
+  const { pathWithoutLocale, locale } = useI18n()
+  const navItems = getNavItems(locale as any, pageOpts.pageMap)
   // Compute some values for the `NavContext`
   const { previousPage, currentPage, nextPage, currentGroup } = useMemo(() => {
     let previousPage = null

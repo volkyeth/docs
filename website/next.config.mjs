@@ -15,24 +15,8 @@ const withNextra = nextra({
   codeHighlight: false,
   // defaultShowCopyCode: true,
   transformPageOpts(pageOpts) {
-    pageOpts.pageMap = []
+    // pageOpts.pageMap = []
     return pageOpts
-  },
-  transform(content, { route }) {
-    if (route) {
-      return `
-import { getNavItems } from '@/navigation'
-
-${content}
-
-export const getStaticProps = async () => {
-  const navItems = await getNavItems('${route.split('/')[1]}')
-  return {
-    props: { navItems }
-  }
-}`
-    }
-    return content
   },
 })
 

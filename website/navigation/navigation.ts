@@ -33,7 +33,6 @@ export const navigation = (locale: AppLocale): NavItemDefinition[] => [
     slug: 'developing',
     children: [
       { slug: 'supported-networks' },
-      { slug: 'defining-a-subgraph' },
       { slug: 'creating-a-subgraph' },
       { slug: 'assemblyscript-api' },
       { slug: 'unit-testing-framework' },

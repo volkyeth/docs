@@ -1,6 +1,4 @@
-import grayMatter from 'gray-matter'
-import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { Folder, MdxFile, PageOpts } from 'nextra'
 
 import { defaultLocale } from '@edgeandnode/components'
 
@@ -10,15 +8,19 @@ import { Frontmatter } from '@/layout'
 import { navigation } from './navigation'
 import { NavItem, NavItemDefinition, NavItemPage, NavItemPromise } from './types'
 
-const navItemsPromiseByLocale: { [key in AppLocale]?: Promise<NavItem[]> } = {}
+const navItemsPromiseByLocale: { [key in AppLocale]?: NavItem[] } = {}
 
-export const getNavItems = async (locale: AppLocale = defaultLocale): Promise<NavItem[]> => {
+export const getNavItems = (locale: AppLocale = defaultLocale, pageMap: PageOpts['pageMap']): NavItem[] => {
   let navItemsPromise = navItemsPromiseByLocale[locale]
 
   if (!navItemsPromise) {
+    const filteredPageMap =
+      pageMap
+        .find((pageItem): pageItem is Folder => 'name' in pageItem && pageItem.name === locale)
+        ?.children.flatMap((o) => (o.kind === 'Folder' ? o.children : o.kind === 'Meta' ? [] : [o])) || []
     const definitions = navigation(locale)
 
-    navItemsPromise = (async () => {
+    navItemsPromise = (() => {
       const handleDefinition = (definition: NavItemDefinition, parentPath?: string): NavItemPromise => {
         if ('divider' in definition || 'heading' in definition) {
           return definition
@@ -31,35 +33,14 @@ export const getNavItems = async (locale: AppLocale = defaultLocale): Promise<Na
             children.push(handleDefinition(childDefinition, path))
           }
         }
-        return (async () => {
+        return (() => {
           let title = definition.title
           if (!isGroup) {
-            const filePath = `${path}${path.endsWith('/') ? 'index' : ''}`
-            const filesToTry = [`${locale}${filePath}.mdx`, `${locale}${filePath}.tsx`, `[locale]${filePath}.tsx`]
-            let currentTry = 0
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            while (true) {
-              try {
-                const fileToTry = filesToTry[currentTry]
-                let frontmatter: Frontmatter | ((locale: AppLocale) => Frontmatter)
-                if (fileToTry.endsWith('.mdx')) {
-                  const { data } = grayMatter(await readFile(join(process.cwd(), 'pages', fileToTry), 'utf8'))
-                  frontmatter = data
-                } else {
-                  const mod = await import(`../pages/${fileToTry}`)
-                  frontmatter = mod.frontmatter
-                }
-                if (!title && frontmatter) {
-                  const frontmatterData = typeof frontmatter === 'function' ? frontmatter(locale) : frontmatter
-                  title = frontmatterData.navTitle ?? frontmatterData.title
-                }
-                break
-              } catch (error) {
-                currentTry++
-                if (currentTry >= filesToTry.length) {
-                  return null
-                }
-              }
+            const frontMatter = filteredPageMap.find(
+              (o): o is MdxFile<Frontmatter> => o.kind === 'MdxPage' && o.route === `/${locale}${path}`
+            )?.frontMatter
+            if (frontMatter) {
+              title = frontMatter.navTitle ?? frontMatter.title
             }
           }
           title = title ?? '[MISSING TITLE]'
@@ -83,15 +64,15 @@ export const getNavItems = async (locale: AppLocale = defaultLocale): Promise<Na
         promises.push(handleDefinition(definition))
       }
 
-      const handlePromise = async (promise: NavItemPromise): Promise<NavItem | null> => {
-        const item = await promise
+      const handlePromise = (promise: NavItemPromise): NavItem | null => {
+        const item = promise
         if (item === null) {
           return null
         }
         if ('children' in item) {
           const children: NavItemPage[] = []
           for (const childPromise of item.children) {
-            const child = await handlePromise(childPromise)
+            const child = handlePromise(childPromise)
             if (child !== null) {
               children.push(child as NavItemPage)
             }
@@ -106,7 +87,7 @@ export const getNavItems = async (locale: AppLocale = defaultLocale): Promise<Na
 
       const items: (NavItem | null)[] = []
       for (const promise of promises) {
-        items.push(await handlePromise(promise))
+        items.push(handlePromise(promise))
       }
 
       let lastFilteredItem = null as NavItem | null
