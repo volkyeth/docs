@@ -4,7 +4,6 @@ import { NotFound, Spacing } from '@edgeandnode/components'
 
 import { LinkInline } from '@/components'
 import { AppLocale, supportedLocales, useI18n } from '@/i18n'
-import { getNavItems } from '@/navigation'
 
 // TODO: Make DRY
 export const getStaticPaths: GetStaticPaths = async () => {
@@ -19,13 +18,8 @@ export const getStaticPaths: GetStaticPaths = async () => {
 // TODO: Make DRY
 export const getStaticProps: GetStaticProps = async (context) => {
   const locale = context.params!.locale as AppLocale
-  const navItems = await getNavItems(locale)
-
   return {
-    props: {
-      locale,
-      navItems,
-    },
+    props: { locale },
   }
 }
 

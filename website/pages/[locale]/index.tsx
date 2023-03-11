@@ -16,13 +16,11 @@ import {
 import { Heading, Image, Link, LinkInline, Paragraph } from '@/components'
 import { AppLocale, supportedLocales, translations, useI18n } from '@/i18n'
 import MDXLayout, { Frontmatter } from '@/layout'
-import { getNavItems, NavItem } from '@/navigation'
 
 export const frontmatter = (locale: AppLocale): Frontmatter => ({
   title: translate(translations, locale, 'index.title'),
 })
 
-// TODO: Make DRY
 export const getStaticPaths: GetStaticPaths = async () => {
   return {
     paths: supportedLocales.map((locale) => ({
@@ -35,19 +33,13 @@ export const getStaticPaths: GetStaticPaths = async () => {
 // TODO: Make DRY
 export const getStaticProps: GetStaticProps = async (context) => {
   const locale = context.params!.locale as AppLocale
-  const navItems = await getNavItems(locale)
 
   return {
-    props: {
-      locale,
-      navItems,
-    },
+    props: { locale },
   }
 }
 
-type IndexProps = { navItems: NavItem[] }
-
-const Index: NextPage<IndexProps> = ({ navItems }: IndexProps) => {
+const Index: NextPage = () => {
   const { t, locale } = useI18n()
 
   const headings: NextraHeading[] = useMemo(
@@ -79,7 +71,6 @@ const Index: NextPage<IndexProps> = ({ navItems }: IndexProps) => {
         frontMatter: frontmatter(locale as AppLocale),
         headings,
       }}
-      pageProps={{ navItems }}
     >
       <Paragraph>{t('index.intro')}</Paragraph>
       <ul
@@ -315,7 +306,12 @@ const Index: NextPage<IndexProps> = ({ navItems }: IndexProps) => {
                   <Image
                     src={network.image}
                     alt=""
-                    sx={{ mb: Spacing['8px'], width: '40px', height: '40px', transition: buildTransition('TRANSFORM') }}
+                    sx={{
+                      mb: Spacing['8px'],
+                      width: '40px',
+                      height: '40px',
+                      transition: buildTransition('TRANSFORM'),
+                    }}
                   />
                   {network.title}
                   {network.beta ? '*' : ''}
@@ -446,7 +442,12 @@ const Index: NextPage<IndexProps> = ({ navItems }: IndexProps) => {
                   <Image
                     src={network.image}
                     alt=""
-                    sx={{ mb: Spacing['8px'], width: '40px', height: '40px', transition: buildTransition('TRANSFORM') }}
+                    sx={{
+                      mb: Spacing['8px'],
+                      width: '40px',
+                      height: '40px',
+                      transition: buildTransition('TRANSFORM'),
+                    }}
                   />
                   {network.title}
                   {network.beta ? '*' : ''}
